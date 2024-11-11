@@ -17,14 +17,12 @@ def check():
         code_list = []  # 코드 번호 리스트
         name_list = []  # 종목명 리스트
 
-        # refactoring [start] - Jooyeok 20210417
         for i in stock_data.values:
             a.append(i)  # \t를 포함한 리스트
 
         for i in a:
             code_list.append(i[0].split('\t')[0])  # [코드]/t[종목] 형식의 문자열에서 [코드] 부분 추출
             name_list.append(i[0].split('\t')[1])  # [코드]/t[종목] 형식의 문자열에서 [종목] 부분 추출
-        # refactoring [end] - Jooyeok 20210417
 
         # add code converter [start] - Jooyeok 20210417
         if len(request.args.to_dict()):  # get 방식으로 전송 받은 데이터가 있을 경우 # Items menu handle - Jooyeok 20210424
@@ -55,19 +53,16 @@ def check():
 
         if len(code) == 0:  # 위 for문 안의 if문에 한번도 들어가지 않았다면 code는 빈 값이다.
             return render_template('fail.html')
-        # add code converter [end] - Jooyeok 20210417
 
         URL = "https://finance.naver.com/item/main.naver?code=" + code
         response=requests.get(URL)
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
 
-        # add summary_info [start] - Jooyeok 20210417
         summary_info = []  # 기업개요
         summary_p = soup.select('#summary_info p')
         for p in summary_p:
             summary_info.append(p.text)
-        # add summary_info [end] - Jooyeok 20210417
 
         price_table = soup.select('div.section.trade_compare')[0]  # div태그의 클래스 값이 section.trade_compare인 태그를 price_table에 넣어줌
         price = [item.get_text().strip() for item in price_table.select('td')][0]  # price_table의 첫번째 td태그에서 문자열을 택해 앞뒤 공백을 제거 후 현재가를 가져옴
@@ -114,11 +109,9 @@ def check():
 
         foreign_stock = soup.select('div.gray')[0].select('em')[1].text.replace(",", "")
 
-        # append foreign rate [start] - Jooyeok 20210425
         foreign_rate = round(float(int(foreign_stock) / int(TOTAL_STOCKS)) * 100, 2)
         foreign_rate_per = str(foreign_rate) + "%"
         STOCK_INFO.append(foreign_rate_per)
-        # append foreign rate [end] - Jooyeok 20210425
 
         specialist_op = soup.select('div.tab_con1 div')[4]
 
@@ -127,11 +120,9 @@ def check():
 
         per_table = soup.select('table.per_table')[0]
         PER_TABLE = [item.get_text().strip() for item in per_table.select('em')][0:7]  # PER_TABLE리스트에 첫 em태그부터 6번째 em태그까지의 PER EPS 추정PER 추정EPS PBR BPS 배당수익률 을 넣어줌
-        # change order[start] - Jooyeok 20210425
         PER_TABLE_INDEX = ['PER', '추정PER', '동일업종PER', 'EPS', '추정EPS', 'PBR', 'BPS', '배당률']
         PER_TABLE_INDEXNUM = [0, 2, 7, 1, 3, 4, 5, 6]
         PER_TABLE_UNIT = ['배', '배', '배', '원', '원', '배', '원', '%']
-        # change order[end] - Jooyeok 20210425
 
         s_per = soup.select('div.gray')[1]
         D_PER = [item.get_text().strip() for item in s_per.select('em')][0]  # 동일업종 per
@@ -244,13 +235,11 @@ def check():
         chart = soup.find("img", id="img_chart_area")  # 일봉 차트 img태그
         chart_url = chart["src"]  # 일봉 선차트 URL
 
-        # change to bar chart [start] - Jooyeok 20210417
         chart_url_pref = chart_url.split('area/day')[0]
         chart_url_post = chart_url.split('area/day')[1]
         chart_daily_url = chart_url_pref + "candle/day" + chart_url_post  # 주봉 봉차트 URL
         chart_weekly_url = chart_url_pref + "candle/week" + chart_url_post  # 주봉 봉차트 URL
         chart_monthly_url = chart_url_pref + "candle/month" + chart_url_post  # 월봉 봉차트 URL
-        # change to bar chart [end] - Jooyeok 20210417
 
 
     except Exception as e:
